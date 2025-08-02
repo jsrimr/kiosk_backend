@@ -1,0 +1,15 @@
+# TensorFlow (CPU version for broad compatibility on Windows)
+tensorflow-cpu
+
+# For image processing
+Pillow
+numpy
+
+# For making API requests
+requests
+
+# For reading .env files
+python-dotenv
+
+# For monitoring the input directory
+watchdog
