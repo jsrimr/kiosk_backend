@@ -4,6 +4,7 @@ import time
 import json
 import base64
 from pathlib import Path
+import warnings
 
 import requests
 import numpy as np
@@ -12,23 +13,43 @@ from dotenv import load_dotenv
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-# --- Configuration ---
-# Load environment variables from .env file
-load_dotenv()
+
+# --- Configuration & Paths ---
+
+def get_app_paths():
+    """
+    Determines application paths for both script and PyInstaller bundle execution.
+    Returns (base_dir, bundle_dir)
+    """
+    if getattr(sys, 'frozen', False):
+        # Running as a PyInstaller bundle
+        base_dir = Path(sys.executable).resolve().parent
+        bundle_dir = Path(sys._MEIPASS)
+    else:
+        # Running as a script
+        base_dir = Path(__file__).resolve().parent
+        bundle_dir = base_dir
+    return base_dir, bundle_dir
+
+BASE_DIR, BUNDLE_DIR = get_app_paths()
+
+# Load environment variables from .env file located next to the executable or script
+load_dotenv(dotenv_path=(BASE_DIR / ".env"))
+
 AILAB_KEY = os.getenv("AILABAPI_KEY")
 AGE_API_URL = 'https://www.ailabapi.com/api/portrait/effects/face-attribute-editing'
 
-# Define paths
-BASE_DIR = Path(__file__).resolve().parent
+# Define paths for I/O and data files
 INPUT_DIR = BASE_DIR / "input_images"
 OUTPUT_DIR = BASE_DIR / "outputs"
-MODEL_DIR = BASE_DIR / "model"
+MODEL_DIR = BUNDLE_DIR / "model"
 MODEL_PATH = MODEL_DIR / "keras_model.h5"
 LABELS_PATH = MODEL_DIR / "labels.txt"
-DB_PATH = BASE_DIR / "db.json"
+DB_PATH = BUNDLE_DIR / "db.json"
 
 # Suppress TensorFlow informational messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 
 # --- Global Variables ---
 model = None
@@ -47,7 +68,6 @@ def load_all_models_and_data():
     try:
         from tensorflow.keras.models import load_model
         # Disable experimental features that might cause issues on some systems
-        np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
         model = load_model(MODEL_PATH, compile=False)
         print("Keras model loaded successfully.")
     except Exception as e:
