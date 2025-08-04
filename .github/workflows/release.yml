@@ -27,7 +27,7 @@ jobs:
 
       - name: Build executable with PyInstaller
         run: |
-          pyinstaller --onefile --windowed --add-data "model;model" --add-data "db.json;." --name "main" main.py
+          pyinstaller --onefile --add-data "model;model" --add-data "db.json;." --name "main" main.py
       
       - name: Upload executable to Release
         uses: softprops/action-gh-release@v1
